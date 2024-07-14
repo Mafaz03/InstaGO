@@ -2,13 +2,33 @@ package main
 
 import (
 	"errors"
+	"io"
 	"log"
 	"net/http"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
-func GetProfilePicture(username string) (string, error) {
+func HttpToByte(url string) []byte {
+	response, err := http.Get(url)
+	if err != nil {
+		log.Fatalf("Failed to fetch URL: %v", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		log.Fatalf("Failed to fetch URL, status code: %d", response.StatusCode)
+	}
+
+	imageBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		log.Fatalf("Failed to read response body: %v", err)
+	}
+
+	return imageBytes
+}
+
+func GetProfilePicture(username string) ([]byte, error) {
 	url := "https://www.instagram.com/" + username
 	response, err := http.Get(url)
 	if err != nil {
@@ -23,7 +43,7 @@ func GetProfilePicture(username string) (string, error) {
 
 	doc, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	var profilePictureURL string
@@ -36,10 +56,10 @@ func GetProfilePicture(username string) (string, error) {
 
 	if profilePictureURL != "" {
 		// fmt.Println("Profile Picture URL:", profilePictureURL)
-		return profilePictureURL, nil
+		return HttpToByte(profilePictureURL), nil
 	} else {
 		// fmt.Println("Profile Picture URL not found")
-		return "", errors.New("profile Picture URL not found")
+		return nil, errors.New("profile Picture URL not found")
 	}
 
 }
