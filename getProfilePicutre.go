@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 
 	"github.com/PuerkitoBio/goquery"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func HttpToByte(url string) []byte {
@@ -28,7 +31,7 @@ func HttpToByte(url string) []byte {
 	return imageBytes
 }
 
-func GetProfilePicture(username string) ([]any, error) {
+func GetProfilePicture(s *Worker, username string) (map[string]interface{}, error) {
 	url := "https://www.instagram.com/" + username
 	response, err := http.Get(url)
 	if err != nil {
@@ -55,13 +58,22 @@ func GetProfilePicture(username string) ([]any, error) {
 	})
 
 	if profilePictureURL != "" {
-		// fmt.Println("Profile Picture URL:", profilePictureURL)
-		return []any{profilePictureURL, HttpToByte(profilePictureURL)}, nil
-		// return HttpToByte(profilePictureURL), nil
-	} else {
-		// fmt.Println("Profile Picture URL not found")
-		// return nil, errors.New("profile Picture URL not found")
-		return []any{nil, nil}, errors.New("profile Picture URL not found")
-	}
+		if isExists(s, username) {
+			coll := s.client.Database("InstaPFP").Collection("pfp")
+			coll.DeleteOne(context.TODO(), bson.D{{Key: "username", Value: username}})
+			fmt.Printf("%v Already eixists, updating...", username)
+		}
+		dict := make(map[string]interface{})
+		dict["username"] = username
+		dict["url"] = profilePictureURL
+		dict["byte"] = HttpToByte(profilePictureURL)
+		return dict, nil
 
+	} else {
+		// dict := make(map[string]interface{})
+		// dict["username"] = username
+		// dict["url"] = nil
+		// dict["byte"] = nil
+		return nil, errors.New("profile Picture URL not found")
+	}
 }
