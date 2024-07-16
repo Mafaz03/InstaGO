@@ -38,7 +38,7 @@ func SavetoMongo(s *Worker, info map[string]interface{}) {
 	if err != nil {
 		log.Fatalf("Error Could not InsertOne: %v", err)
 	}
-	fmt.Println("Successfully Saved\n")
+	fmt.Printf("Successfully Saved\n")
 }
 
 func getusernameFromHeader(header http.Header) (string, error) {
