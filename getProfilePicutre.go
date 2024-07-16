@@ -28,7 +28,7 @@ func HttpToByte(url string) []byte {
 	return imageBytes
 }
 
-func GetProfilePicture(username string) ([]byte, error) {
+func GetProfilePicture(username string) ([]any, error) {
 	url := "https://www.instagram.com/" + username
 	response, err := http.Get(url)
 	if err != nil {
@@ -56,10 +56,12 @@ func GetProfilePicture(username string) ([]byte, error) {
 
 	if profilePictureURL != "" {
 		// fmt.Println("Profile Picture URL:", profilePictureURL)
-		return HttpToByte(profilePictureURL), nil
+		return []any{profilePictureURL, HttpToByte(profilePictureURL)}, nil
+		// return HttpToByte(profilePictureURL), nil
 	} else {
 		// fmt.Println("Profile Picture URL not found")
-		return nil, errors.New("profile Picture URL not found")
+		// return nil, errors.New("profile Picture URL not found")
+		return []any{nil, nil}, errors.New("profile Picture URL not found")
 	}
 
 }

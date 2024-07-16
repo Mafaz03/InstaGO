@@ -7,7 +7,6 @@ import (
 	"net/http"
 )
 
-// type
 
 func getusernameFromHeader(header http.Header) (string, error) {
 	val := header.Get("username")
@@ -23,12 +22,12 @@ func showPic(w http.ResponseWriter, r *http.Request) {
 		// fmt.Println("Error: ", err)
 		log.Fatal(err)
 	}
-	pic, err := GetProfilePicture(username)
+	UrlandByte, err := GetProfilePicture(username)
 	if err != nil {
 		fmt.Println("Error: ", err)
 	}
-	dictionary := make(map[string][]byte)
-	dictionary[username] = pic
+	dictionary := make(map[string][]any)
+	dictionary[username] = UrlandByte
 	w.WriteHeader(http.StatusOK)
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dictionary)
