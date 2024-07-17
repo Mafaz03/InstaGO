@@ -1,1 +1,4 @@
 github.com/mongodb/mongo-go-driver
+instaloader
+
+# for reference, will update soon

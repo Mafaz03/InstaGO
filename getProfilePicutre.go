@@ -61,7 +61,7 @@ func GetProfilePicture(s *Worker, username string) (map[string]interface{}, erro
 		if isExists(s, username) {
 			coll := s.client.Database("InstaPFP").Collection("pfp")
 			coll.DeleteOne(context.TODO(), bson.D{{Key: "username", Value: username}})
-			fmt.Printf("%v Already eixists, updating...", username)
+			fmt.Printf("%v Already exists, updating...", username)
 		}
 		dict := make(map[string]interface{})
 		dict["username"] = username
@@ -70,10 +70,6 @@ func GetProfilePicture(s *Worker, username string) (map[string]interface{}, erro
 		return dict, nil
 
 	} else {
-		// dict := make(map[string]interface{})
-		// dict["username"] = username
-		// dict["url"] = nil
-		// dict["byte"] = nil
 		return nil, errors.New("profile Picture URL not found")
 	}
 }

@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
+	"github.com/go-chi/chi"
+	"github.com/go-chi/cors"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -38,7 +42,7 @@ func SavetoMongo(s *Worker, info map[string]interface{}) {
 	if err != nil {
 		log.Fatalf("Error Could not InsertOne: %v", err)
 	}
-	fmt.Printf("Successfully Saved\n")
+	fmt.Printf("%v\nSuccessfully Saved\n\n", info["username"])
 }
 
 func getusernameFromHeader(header http.Header) (string, error) {
@@ -71,8 +75,12 @@ func isExists(s *Worker, username string) bool {
 }
 
 func main() {
-	PORT := 8080
-	fmt.Println("Listening on PORT: ", PORT)
+	godotenv.Load()
+
+	PORT := os.Getenv("PORT")
+	if PORT == "" {
+		log.Fatal("Port not found in env")
+	}
 
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
@@ -80,9 +88,34 @@ func main() {
 	}
 	server := NewWorker(client)
 
-	http.HandleFunc("/pfp", server.showPic)
-	http.HandleFunc("/showall", server.showAll)
+	router := chi.NewRouter()
 
-	address := fmt.Sprintf(":%d", PORT)
-	http.ListenAndServe(address, nil)
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
+
+	
+	router.Get("/pfp", server.showPic)
+	router.Get("/showall", server.showAll)
+	router.Get("/showallBatches", server.showPicBatch)
+
+	srv := &http.Server{
+		Handler: router,
+		Addr:    ":" + PORT,
+	}
+	log.Printf("listening on Port number: %v", PORT)
+	err = srv.ListenAndServe()
+	if err != nil {
+		log.Fatal("ERROR: ", err)
+	}
+	
+
+	// http.HandleFunc("/pfp", server.showPic)
+	// http.HandleFunc("/showall", server.showAll)
+	// address := fmt.Sprintf(":%v", PORT)
+	// http.ListenAndServe(address, nil)
 }
