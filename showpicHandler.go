@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 )
@@ -36,23 +38,48 @@ func getmaxFromHeader(header http.Header) (int, error) {
 	maxStr := header.Get("max")
 	maxInt, err := strconv.Atoi(maxStr)
 	if err != nil {
-		return 0, errors.New("Invalid max header value")
+		return 0, errors.New("invalid max header value")
 	}
 	return maxInt, nil
 }
 
-func (s *Worker) showPicBatch(w http.ResponseWriter, r *http.Request) {
+func getrootAccountFromHeader(header http.Header) (string, error) {
+	rootAcc := header.Get("root")
+	if rootAcc == "" {
+		return "", errors.New("invalid root account header")
+	}
+	return rootAcc, nil
+}
 
-	// usernames := []string{"nigg.pablo", "virat.kohli", "anushkasharma"}
-	content, err := ioutil.ReadFile("followers_scrape/downloads/scraped.txt")
+func (s *Worker) showPicBatch(w http.ResponseWriter, r *http.Request) {
+	rootAcc, err := getrootAccountFromHeader(r.Header)
 	if err != nil {
 		log.Fatal(err)
 	}
-	usernames := strings.Split(string(content), "\n")
 	max, err := getmaxFromHeader(r.Header)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	err = os.WriteFile("input.txt", []byte(rootAcc), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	cmd := exec.Command("python3", "getFollowers.py", string(max))
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + string(output))
+		return
+	}
+	fmt.Println(string(output))
+
+	content, err := ioutil.ReadFile("scraped.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	usernames := strings.Split(string(content), "\n")
+
+	var success int
 	for num, username := range usernames {
 		UrlandByte, err := GetProfilePicture(s, username)
 		if UrlandByte != nil {
@@ -60,6 +87,7 @@ func (s *Worker) showPicBatch(w http.ResponseWriter, r *http.Request) {
 				fmt.Println("Error: ", err)
 			}
 			SavetoMongo(s, UrlandByte)
+			success += 1
 		} else {
 			fmt.Printf("Could not fetch for %v\n", username)
 		}
@@ -67,7 +95,7 @@ func (s *Worker) showPicBatch(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			w.Header().Add("Content-Type", "application/json")
 			message := map[string]string{
-				"Success": fmt.Sprintf("Saved, %v", num),
+				"Success": fmt.Sprintf("Saved, %v", success),
 			}
 			json.NewEncoder(w).Encode(message)
 			break

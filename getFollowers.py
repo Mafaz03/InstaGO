@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import re
 import csv
 from time import sleep
@@ -39,14 +41,14 @@ for ind in range(len(PROFILE)):
     pro = PROFILE[ind]
     try:
         print('\n\nGetting followers from',pro)
-        filename = 'downloads/scraped.txt'
+        filename = 'scraped.txt'
         
         profile = instaloader.Profile.from_username(L.context, pro)
         main_followers = profile.followers
         count = 0
         total = 0
         # Print list of followees
-        for person in profile.get_followers():
+        for num, person in enumerate(profile.get_followers()):
             try:
                 total+=1
                 username = person.username
@@ -64,5 +66,6 @@ for ind in range(len(PROFILE)):
                 
             except Exception as e:
                 print(e)
+            if num == int(sys.argv[1]): break
     except:
         print('Skipping',pro)
