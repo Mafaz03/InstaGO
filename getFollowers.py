@@ -66,6 +66,7 @@ for ind in range(len(PROFILE)):
                 
             except Exception as e:
                 print(e)
+            print(int(sys.argv))
             if num == int(sys.argv[1]): break
     except:
         print('Skipping',pro)
