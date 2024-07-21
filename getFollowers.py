@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+import logging
+logging.info("Hello")
 
 import re
 import csv
@@ -26,12 +28,13 @@ L = instaloader.Instaloader()
 
 L.login(username, password)        # (login)
 
-pathlib.Path('downloads/').mkdir(parents=True, exist_ok=True)
 
 http = urllib3.PoolManager()
 
 start = timer()
-curr = str(datetime.datetime.now())    
+curr = str(datetime.datetime.now())   
+try: os.remove("scraped.txt")
+except: pass
 
 f = open('input.txt','r')
 accounts = f.read()
@@ -58,15 +61,22 @@ for ind in range(len(PROFILE)):
                     print(e)
 
                 print('Username:',username)
+                logging.info('Username:',username)
                 with open(filename,'a',newline='') as csvf:
                     csvf.write(username+'\n')
 
                 print('--------------------------------------------------------------------------------\nTotal followers scraped:',total,' out of',main_followers)
+                logging.info('--------------------------------------------------------------------------------\nTotal followers scraped:',total,' out of',main_followers)
+
                 print('Time:',str(datetime.timedelta(seconds=(timer()-start))))
+                logging.info('Time:',str(datetime.timedelta(seconds=(timer()-start))))
                 
             except Exception as e:
                 print(e)
-            print(int(sys.argv))
-            if num == int(sys.argv[1]): break
-    except:
+                logging.info(e)
+
+            if num == int(sys.argv[1])-1: break
+    except Exception as e:
         print('Skipping',pro)
+        print(e)
+        logging.info('Skipping',pro)

@@ -65,7 +65,7 @@ func (s *Worker) showPicBatch(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cmd := exec.Command("python3", "getFollowers.py", string(max))
+	cmd := exec.Command("python3", "getFollowers.py", strconv.Itoa(max))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(fmt.Sprint(err) + ": " + string(output))
