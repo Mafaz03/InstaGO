@@ -11,8 +11,8 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 )
-
 func (s *Worker) showPic(w http.ResponseWriter, r *http.Request) {
 	username, err := getusernameFromHeader(r.Header)
 	if err != nil {
@@ -80,6 +80,7 @@ func (s *Worker) showPicBatch(w http.ResponseWriter, r *http.Request) {
 	usernames := strings.Split(string(content), "\n")
 
 	var success int
+	ticker := time.NewTicker(2 * time.Second)
 	for num, username := range usernames {
 		UrlandByte, err := GetProfilePicture(s, username)
 		if UrlandByte != nil {
@@ -100,6 +101,7 @@ func (s *Worker) showPicBatch(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(message)
 			break
 		}
+		<-ticker.C
 	}
 
 }
